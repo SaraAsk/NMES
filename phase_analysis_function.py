@@ -79,10 +79,15 @@ def extract_phase(filtered_data, fs, freq_band, cycles, angletype = 'degree'):
 
     for idx_epoch in range(0,num_epoch):
         for idx, value in enumerate(freq_band):
+            #print(idx, value)
             respective_tw = math.ceil((1/value)*cycles*fs) + 5  # 3 cycles of frequency and 5 extra sample points
             #math.ceil: rounds a number up to the next largest integer
             cycle_tp_start = len(filtered_data[2]) - respective_tw 
             signal = filtered_data[idx_epoch, cycle_tp_start:]
+            
+            # put a 500ms window ?
+            signal = filtered_data[idx_epoch, 0:500]
+            
             
             N = len(signal) 
             fx = np.fft.rfft((signal), N)  # Extract FFT from real data. discretes Fourier Transform for real input
@@ -385,126 +390,8 @@ def plot_phase_bins(bin_means, bin_class, bin_num, scaling_proportion):
 
 
 
-def plot_mean_phase_bins_each_freq(bin_means, bin_class, bin_num, scaling_proportion):
-    ''' plots the mean of phase-bins and also plots the bins with the height 
-    representing the number of trials within the bin (in proportion)
-    
-    
-    Args:
-        bin_means(list):
-            list of means of each trial in corresponding bin
-        bin_class (float):
-            array with values of bin numbers, corresponding to the phases in epoched_phases
-            frequencies * epochs
-        bin_num(int):
-            number of bins on unit circle that epoch phases will be assigned to
-        scaling_proportion(int):
-            an integer that scales the height of bins in order to adjust to 
-            unit circle with radius = 1
-            e.g. amount of trials in bin 5 = 230 -> scale by 300: 230/300 = 0.7667
-            -> this bin will have a height of 0.7667 on unit circle when plotted
-        
-    Returns:
-        plotted phases within corresponding bin
-        also: height of displayed bin shows number of trials within bin (higher -> more trials)
-    
-    call: plot_phase_bins(bin_means, bin_class, bin_num, scaling_proportion = 300)
-    '''
-    theta = np.linspace(0.0, 2 * np.pi, bin_num, endpoint=False)
-    rad_height = np.nan*np.zeros(bin_num+1)  # +1 because bin 0 and 16 are not combined yet
-    unique, counts = np.unique(bin_class[1,:], return_counts=True) 
-    # how many cases are there for each unique bin? -> dictionary of unique values of array bin_class
- 
-    for idx in range(unique.size):
-        if unique[idx].is_integer() is True:  # Only for intger values (so, no nan due to phase in the middle of 2 bins)
-               rad_height[idx] = counts[idx]/scaling_proportion  # Set height in proportion
-               if unique[idx] == 0:  # For bin 0 and last bin, combine values (0/360°)
-                   rad_height[0] = (counts[0]+counts[-1])/scaling_proportion
-        
-    # Exclude bins with nan value and the last bin (already combined with first bin)    
-    nan_array = ~(np.isnan(rad_height))
-    rad_height = rad_height[nan_array]
-    rad_height = rad_height[:-1] 
-    
-    R1 = [0,1]  # Defined as UNIT circle (radius = 1)
-    bin_phase_rad = np.deg2rad(phase_bin_means[1,:])
-    
-    
-    for i in range(len(eeg_epoch_filt_phase[0,:])):
-        if eeg_epoch_filt_phase[3,i] < 0 :
-            d[0, i] = eeg_epoch_filt_phase[3,i] + 360
-        else:
-            d[0, i] = eeg_epoch_filt_phase[3,i]
-    
-    a , b=np.histogram(d[0, i] , bins=bins)
-    centers = np.deg2rad(np.ediff1d(b)//2 + b[:-1])
-
-    
-    
-    plt.figure()
-    plt.polar([bin_phase_rad, bin_phase_rad], R1, lw=2, color = 'navy')
-    width = (2*np.pi) / bin_num
-    ax = plt.subplot(111, projection='polar')
-    bars = ax.bar(theta, rad_height, width=width, bottom=0.0, color = 'lightgrey' , edgecolor = 'grey')
-
-    return (plt)
 
 
-
-
-
-
-def plot_hist_phase_bins_each_freq(bin_means, bin_class, bin_num, scaling_proportion):
-    ''' plots the mean of phase-bins and also plots the bins with the height 
-    representing the number of trials within the bin (in proportion)
-    
-    
-    Args:
-        bin_means(list):
-            list of means of each trial in corresponding bin
-        bin_class (float):
-            array with values of bin numbers, corresponding to the phases in epoched_phases
-            frequencies * epochs
-        bin_num(int):
-            number of bins on unit circle that epoch phases will be assigned to
-        scaling_proportion(int):
-            an integer that scales the height of bins in order to adjust to 
-            unit circle with radius = 1
-            e.g. amount of trials in bin 5 = 230 -> scale by 300: 230/300 = 0.7667
-            -> this bin will have a height of 0.7667 on unit circle when plotted
-        
-    Returns:
-        plotted phases within corresponding bin
-        also: height of displayed bin shows number of trials within bin (higher -> more trials)
-    
-    call: plot_phase_bins(bin_means, bin_class, bin_num, scaling_proportion = 300)
-    '''
-    theta = np.linspace(0.0, 2 * np.pi, bin_num, endpoint=False)
-    rad_height = np.nan*np.zeros(bin_num+1)  # +1 because bin 0 and 16 are not combined yet
-    unique, counts = np.unique(bin_class[1,:], return_counts=True) 
-    # how many cases are there for each unique bin? -> dictionary of unique values of array bin_class
- 
-    for idx in range(unique.size):
-        if unique[idx].is_integer() is True:  # Only for intger values (so, no nan due to phase in the middle of 2 bins)
-               rad_height[idx] = counts[idx]/scaling_proportion  # Set height in proportion
-               if unique[idx] == 0:  # For bin 0 and last bin, combine values (0/360°)
-                   rad_height[0] = (counts[0]+counts[-1])/scaling_proportion
-        
-    # Exclude bins with nan value and the last bin (already combined with first bin)    
-    nan_array = ~(np.isnan(rad_height))
-    rad_height = rad_height[nan_array]
-    rad_height = rad_height[:-1] 
-    
-    R1 = [0,1]  # Defined as UNIT circle (radius = 1)
-    bin_phase_rad = np.deg2rad(phase_bin_means[1,:])
-    
-    plt.figure()
-    plt.polar([bin_phase_rad, bin_phase_rad], R1, lw=2, color = 'navy')
-    width = (2*np.pi) / bin_num
-    ax = plt.subplot(111, projection='polar')
-    bars = ax.bar(theta, rad_height, width=width, bottom=0.0, color = 'lightgrey' , edgecolor = 'grey')
-
-    return (plt)
 
 
 
@@ -652,15 +539,15 @@ def get_ERP_1st_2nd(plot):
     import numpy as np
     import mne
     import os
-    evoked_all_condition_dir = "/home/sara/NMES/analyzed data/Epochs_NMES_manually_rejected/evokeds/All_Conditions_Combined/"
+    evoked_all_condition_dir = "/home/sara/NMES/analyzed data/Feb/evokeds/All_Conditions_Combined/"
     evoked_all_condition_data = os.path.join(evoked_all_condition_dir,'Evokeds_all_conditions_ave.fif')
     Evoked_GrandAv= mne.read_evokeds(evoked_all_condition_data, verbose=False)
     Evoked_GrandAv = Evoked_GrandAv[0]    
 
     
     # This n1, n2, p2 positions needs to be modified.
-    n1_timewin = [.049, .1]
-    n2_timewin= [.108, .246]
+    n1_timewin = [.02, .08]
+    n2_timewin= [.108, .266]
     p2_timewin = [.28, .36]
     
 
@@ -747,8 +634,8 @@ def do_cosine_fit(erp_amplitude, phase_bin_means, freq_band, labels, perm = True
 
     
     
-    #x = np.array([0, 45, 90, 135, 180, 225, 270, 315])
-    x = phase_bin_means
+    x = np.radians(np.array([0, 45, 90, 135, 180, 225, 270, 315]))
+    #x = phase_bin_means
     
     for i in range(len(erp_amplitude)):
         cosinefit[str(i)] = {}
@@ -826,8 +713,8 @@ def do_cosine_fit_ll(erp_amplitude, phase_bin_means, freq_band, labels, perm = T
 
     
     
-    #x = np.array([0, 45, 90, 135, 180, 225, 270, 315])
-    x = phase_bin_means
+    x = np.radians(np.array([0, 45, 90, 135, 180, 225, 270, 315]))
+    #x = phase_bin_means
     
     for i in range(len(erp_amplitude)):
         cosinefit[str(i)] = {}
@@ -839,7 +726,7 @@ def do_cosine_fit_ll(erp_amplitude, phase_bin_means, freq_band, labels, perm = T
            
             cosinefit[str(i)][str(f)] = []
             fits = []
-            for phase_start in [-np.pi/2, 0, np.pi/2]:      
+            for phase_start in [-np.pi/2, 0, np.pi/2]:   
         
                 amp_start = np.sqrt(np.mean(y**2))
                 model = lmfit.Model(cosinus)
@@ -1171,7 +1058,7 @@ def clustering_channels():
     unique_freqs = np.arange(4, 44, 4)        
     
     adjacency_mat,_ = mne.channels.find_ch_adjacency(epochs_byfreqandphase[str(freq)][str(phase)].info , 'eeg')
-    clusters, mask, pvals = ph_analysis.permutation_cluster(peaks, adjacency_mat)
+    clusters, mask, pvals, thresholds = ph_analysis.permutation_cluster(peaks, adjacency_mat)                 
     nsubj, nchans, npeaks, nphas, nfreqs = np.shape(peaks)    
     allclusters = np.zeros([nchans, npeaks])
     # get the t values for each of the peaks for plotting the topoplots
@@ -1184,7 +1071,7 @@ def clustering_channels():
     
     for p in range(len(clusters)):
         a[:,p] = clusters[p][0]
-    ph_analysis.plot_topomap_peaks_second_v(a, mask, ch_names, [-5,5])
+    ph_analysis.plot_topomap_peaks_second_v(a, mask, ch_names, thresholds , pvals,[-5,5])
     
     
     
@@ -1202,7 +1089,7 @@ def clustering_channels():
     all_channels_clustered = all_ch_names_biggets_cluster[0] + all_ch_names_biggets_cluster[1]
 
         
-    return all_channels_clustered, all_ch_names_biggets_cluster[0], all_ch_names_biggets_cluster[1]
+    return all_channels_clustered, all_ch_names_biggets_cluster[0], all_ch_names_biggets_cluster[1], pvals
 
 
 
@@ -1233,7 +1120,7 @@ def epoch_concat_and_mod_dict(files_GA):
     all_epochs_events = []
     all_names = []
     
-    all_channels_clustered = clustering_channels()
+    all_channels_clustered,_, _,  pvals = clustering_channels()
     
     for f_GA in files_GA:
         epochs_eeg = mne.read_epochs(f_GA, preload=True)
@@ -1282,51 +1169,54 @@ def permutation_cluster(peaks, adjacency_mat):
     # get matrix dimensions
     nsubj, nchans, npeaks = np.shape(mean_peaks)
     nperm = 100
-    clusters = []
     mask = np.zeros([nchans, npeaks])
     max_cluster_size = np.zeros([nperm+1, npeaks])
-    thresholds=[3.2, 3.8]
+    thresholds=[3, 3]
+    pvals = np.zeros([npeaks])
+    clusters = []
     # get the original cluster size during the first loop
     # perform 1000 random permutations (sign flipping) and each time determine the size of the biggest cluster
-    for iperm in range(nperm+1):
-        for p in range(npeaks):
-            cluster = mne.stats.permutation_cluster_1samp_test(mean_peaks[:,:,p], out_type='mask',
-                                                               adjacency=adjacency_mat, threshold=thresholds[p],
-                                                               n_permutations=1000)
-            t_sum = np.zeros([len(cluster[1])])
-            # get the sum of the tvalues for each of the 
-            # clusters to choose the main cluster 
-            # (take magnitude to treat negative and positive cluster equally)
-            for c in range(len(cluster[1])):
-                t_sum[c] = np.abs(sum(cluster[0][cluster[1][c]]))
 
-            # store the maximal cluster size for each iteration 
-            # to later calculate p value
-            # if no cluster was found, put in 0
-            if len(t_sum) > 0:
-                max_cluster_size[iperm, p] = np.max(t_sum)
-                # save the original cluster information (1st iteration) 
-                if iperm == 0:
-                    clusters.append(cluster)
-                    # get the channels which are in the main cluster
-                    mask[:,p] = cluster[1][np.argmax(t_sum)]
-            else:
-                max_cluster_size[iperm, p] = 0
-        # flip signs for next loopwelcome
-        
-        mean_peaks = mean_peaks*np.random.choice([-1,1], size=np.shape(mean_peaks))
-    pvals = np.zeros([npeaks])
     for p in range(npeaks):
-        pvec = np.where(max_cluster_size[:,p] >= max_cluster_size[0,p], 1, 0)
-        pvals[p] = sum(pvec)/len(pvec)
+        cluster = mne.stats.permutation_cluster_1samp_test(mean_peaks[:,:,p], out_type='mask',
+                                                           adjacency=adjacency_mat, threshold=thresholds[p],
+                                                           n_permutations=1000)
+        t_sum = np.zeros([len(cluster[1])])
+        # get the sum of the tvalues for each of the 
+        # clusters to choose the main cluster 
+        # (take magnitude to treat negative and positive cluster equally)
+        for c in range(len(cluster[1])):
+            t_sum[c] = np.abs(sum(cluster[0][cluster[1][c]]))
     
-    return clusters, mask, pvals
+        # store the maximal cluster size for each iteration 
+        # to later calculate p value
+        # if no cluster was found, put in 0
+        if len(t_sum) > 0:
+            max_cluster_size[p] = np.max(t_sum)
+
+            mask[:,p] = cluster[1][np.argmax(t_sum)]
+            
+            # in this part I have chosen negative clusters.
+            if p==0:
+                mask[:,p] = cluster[1][1]
+                pvals[0] = cluster[2][1]
+            else:
+                mask[:,p] = cluster[1][2]
+                pvals[1] = cluster[2][2]
+                
+                
+        clusters.append(cluster)         
+        
+
+    
+
+    return clusters, mask, pvals, thresholds
 
 
 
 
 
-def plot_topomap_peaks_second_v(peaks, mask, ch_names, clim):
+def plot_topomap_peaks_second_v(peaks, mask, ch_names, thresholds, pvals, clim):
 
     import matplotlib.pyplot as plt
 
@@ -1360,8 +1250,15 @@ def plot_topomap_peaks_second_v(peaks, mask, ch_names, clim):
 
     fig.subplots_adjust(wspace=0, hspace=0)
     cb = plt.colorbar(im[0],  ax = sps, fraction=0.02, pad=0.04)
-    
     cb.ax.tick_params(labelsize=12)
+    
+    fig.suptitle('All Frequencies and Peak and trough Phases Vs zero', fontsize = 14)
+    #fig.suptitle('All Frequencies and all phases', fontsize = 14)
+    sps[0].title.set_text(f' \n\n ERP 1\n\n TH = {thresholds[0]} \n\n  cluster_pv = {pvals[0]}')
+    sps[1].title.set_text(f' \n\n ERP 2\n\n TH = {thresholds[1]} \n\n  cluster_pv = {pvals[1]}')
+    cb.set_label('t-value', rotation = 90)
+
+    
 
     plt.show()
 
@@ -1674,6 +1571,52 @@ def epoch_concat_and_mod_dict_bip(files_GA):
 
 
 
+
+
+# =============================================================================
+# 
+# 
+# 
+# 
+# def epoch_concat_and_mod_dict_bip(files_GA):
+#     
+#     save_folder = "/home/sara/NMES/analyzed data/phase_analysis/"
+#     
+#     
+#     
+#     
+#     
+#     
+#     
+#     
+#        
+#     mod = {}
+#     all_epochs_list = []
+#     all_epochs_events = []
+#     all_names = []
+#     
+#     for f_GA in files_GA:
+#         epochs_eeg = mne.read_epochs(f_GA, preload=True)
+# 
+#     
+#         # channels based on clustered channels. Only using those because the size of this variable will be very large. 
+#         all_epochs_list.append(epochs_eeg)
+#         all_epochs_events.append(epochs_eeg.event_id)
+#         all_names.append(f_GA.parts[-1][0:9])
+#     
+#     all_epochs_concat = mne.concatenate_epochs(all_epochs_list)
+#     #all_epochs_concat.save(save_folder + '/epochs all subjects/' +'epochs_all_sub_epo.fif'  , overwrite = True, split_size='2GB')
+#     #all_epochs_concat.save(save_folder + '/epochs all subjects/' +'bip epochs_all_sub_epo.fif'  , overwrite = True, split_size='2GB')
+#     return all_epochs_concat
+# 
+# 
+# 
+# 
+# =============================================================================
+
+
+
+
 def epoch_concat_clustered_and_mod_dict(files_GA):
     
     save_folder = "/home/sara/NMES/analyzed data/phase_analysis/"
@@ -1701,7 +1644,7 @@ def epoch_concat_clustered_and_mod_dict(files_GA):
     # in the epoch list.
     
     
-    all_channels_clustered, ERP_1_ch, ERP_2_ch = clustering_channels()
+    all_channels_clustered, ERP_1_ch, ERP_2_ch, pvals = clustering_channels()
        
     mod = {}
     all_epochs_list = []
@@ -1739,6 +1682,130 @@ def epoch_concat_clustered_and_mod_dict(files_GA):
     #all_epochs_concat.save(save_folder + '/epochs all subjects/' +'epochs_all_sub_epo.fif'  , overwrite = True, split_size='2GB')
     #all_epochs_concat.save(save_folder + '/epochs all subjects/' +'bip epochs_all_sub_epo.fif'  , overwrite = True, split_size='2GB')
     return all_epochs_concat, all_channels_clustered, ERP_1_ch, ERP_2_ch
+
+
+
+
+def epoch_concat_subs_mutltiple_files(files_GA):
+    
+    save_folder = "/home/sara/NMES/analyzed data/phase_analysis/"
+        
+    dict_origin_labels  = {'12Hz_0': 1, '12Hz_135': 2, '12Hz_180': 3, '12Hz_225': 4, '12Hz_270': 5,
+                           '12Hz_315': 6, '12Hz_45': 7, '12Hz_90': 8, '16Hz_0': 9, '16Hz_135': 10, 
+                           '16Hz_180': 11, '16Hz_225': 12, '16Hz_270': 13, '16Hz_315': 14, '16Hz_45': 15, 
+                           '16Hz_90': 16, '20Hz_0': 17, '20Hz_135': 18, '20Hz_180': 19, '20Hz_225': 20, 
+                           '20Hz_270': 21, '20Hz_315': 22, '20Hz_45': 23, '20Hz_90': 24, '24Hz_0': 25,
+                           '24Hz_135': 26, '24Hz_180': 27, '24Hz_225': 28, '24Hz_270': 29, '24Hz_315': 30, 
+                           '24Hz_45': 31, '24Hz_90': 32, '28Hz_0': 33, '28Hz_135': 34, '28Hz_180': 35, 
+                           '28Hz_225': 36, '28Hz_270': 37, '28Hz_315': 38, '28Hz_45': 39, '28Hz_90': 40, 
+                           '32Hz_0': 41, '32Hz_135': 42, '32Hz_180': 43, '32Hz_225': 44, '32Hz_270': 45, 
+                           '32Hz_315': 46, '32Hz_45': 47, '32Hz_90': 48, '36Hz_0': 49, '36Hz_135': 50, 
+                           '36Hz_180': 51, '36Hz_225': 52, '36Hz_270': 53, '36Hz_315': 54, '36Hz_45': 55,
+                           '36Hz_90': 56, '40Hz_0': 57, '40Hz_135': 58, '40Hz_180': 59, '40Hz_225': 60,
+                           '40Hz_270': 61, '40Hz_315': 62, '40Hz_45': 63, '40Hz_90': 64, '4Hz_0': 65,
+                           '4Hz_135': 66, '4Hz_180': 67, '4Hz_225': 68, '4Hz_270': 69, '4Hz_315': 70, 
+                           '4Hz_45': 71, '4Hz_90': 72, '8Hz_0': 73, '8Hz_135': 74, '8Hz_180': 75,
+                           '8Hz_225': 76, '8Hz_270': 77, '8Hz_315': 78, '8Hz_45': 79, '8Hz_90': 80}
+    
+    
+    
+    # These lines go to the permutation cluster function and select the channels that will be appended 
+    # in the epoch list.
+    
+
+    mod = {}
+    all_epochs_list = []
+    all_epochs_events = []
+    all_names = []
+    
+    for f_GA in files_GA:
+        epochs_eeg = mne.read_epochs(f_GA, preload=True)
+        # So basically the problem was mne creats a dict of all stimulation conditions in our case 80. For some epochs data with a small
+        # size all these 80 conditions are not present. It can be 76 so the dict will start from zero to 76 and event_id keys and value will be 
+        # different for each condition in different subjects and there will be a problem during concatinating.
+        # I created a diffault dict, based on 80 condition and forced it to be the same for other epoch files even for the one with less
+        # than 80 conditions.
+        if len(epochs_eeg.event_id) < 80:
+            mod_vals = np.zeros([len(epochs_eeg.events[:, 2]), 2])
+            #shared_keys = set(epochs_eeg.event_id.keys()).intersection(set(dict_origin_labels))
+            for i in epochs_eeg.event_id.keys():
+                #print(i)
+                mod[i] = [i, epochs_eeg.event_id[str(i)], dict_origin_labels[str(i)]]
+            mod_arr = np.array(list(mod.values())) 
+            
+            for i in range(len(epochs_eeg.events[:, 2])):
+                for j in range(len(mod_arr)):
+                    if epochs_eeg.events[:, 2][i] == int(mod_arr[j,1]):
+                        mod_vals[i] = [mod_arr[j,1],mod_arr[j,2] ]
+            epochs_eeg.events[:, 2] = mod_vals[:,1]
+            epochs_eeg.event_id = dict_origin_labels
+    
+        # channels based on clustered channels. Only using those because the size of this variable will be very large. 
+        all_epochs_list.append(epochs_eeg)
+        all_epochs_events.append(epochs_eeg.event_id)
+        all_names.append(f_GA.parts[-1][0:9])
+    
+    all_epochs_concat = mne.concatenate_epochs(all_epochs_list)
+    #all_epochs_concat.save(save_folder + '/epochs all subjects/' +'epochs_all_sub_epo.fif'  , overwrite = True, split_size='2GB')
+    #all_epochs_concat.save(save_folder + '/epochs all subjects/' +'bip epochs_all_sub_epo.fif'  , overwrite = True, split_size='2GB')
+    return all_epochs_concat, f_GA.parts
+
+
+# =============================================================================
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# def epoch_concat_clustered_and_mod_dict(files_GA):
+#     
+#     save_folder = "/home/sara/NMES/analyzed data/phase_analysis/"
+#         
+# 
+#     
+#     # These lines go to the permutation cluster function and select the channels that will be appended 
+#     # in the epoch list.
+#     
+#     
+#     all_channels_clustered, ERP_1_ch, ERP_2_ch, pvals = clustering_channels()
+#        
+#     mod = {}
+#     all_epochs_list = []
+#     all_epochs_events = []
+#     all_names = []
+#     
+#     for f_GA in files_GA:
+#         epochs_eeg = mne.read_epochs(f_GA, preload=True)
+#         # So basically the problem was mne creats a dict of all stimulation conditions in our case 80. For some epochs data with a small
+#         # size all these 80 conditions are not present. It can be 76 so the dict will start from zero to 76 and event_id keys and value will be 
+#         # different for each condition in different subjects and there will be a problem during concatinating.
+#         # I created a diffault dict, based on 80 condition and forced it to be the same for other epoch files even for the one with less
+#         # than 80 conditions.
+# 
+#     
+#         # channels based on clustered channels. Only using those because the size of this variable will be very large. 
+#         all_epochs_list.append(epochs_eeg.pick_channels(all_channels_clustered))
+#         all_epochs_events.append(epochs_eeg.event_id)
+#         all_names.append(f_GA.parts[-1][0:9])
+#     
+#     all_epochs_concat = mne.concatenate_epochs(all_epochs_list)
+#     #all_epochs_concat.save(save_folder + '/epochs all subjects/' +'epochs_all_sub_epo.fif'  , overwrite = True, split_size='2GB')
+#     #all_epochs_concat.save(save_folder + '/epochs all subjects/' +'bip epochs_all_sub_epo.fif'  , overwrite = True, split_size='2GB')
+#     return all_epochs_concat, all_channels_clustered, ERP_1_ch, ERP_2_ch
+# 
+# =============================================================================
+
+
+
+
+
+
+
+
+
+
 
 
 
