@@ -734,7 +734,11 @@ def do_cosine_fit_ll(erp_amplitude, phase_bin_means, freq_band, labels, perm = T
                                                                                cosine fitting
                                                                                
              freq_band:
-                 freq_band = np.arange(4,44,4), for real time labels.                                                          
+                 freq_band = np.arange(4,44,4), for real time labels.  
+                 
+             labels:
+                 Latency of the two components in ms, around [1057, 1181]
+                 
                                                                    """
     
     cosinefit = {}
