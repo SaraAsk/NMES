@@ -705,7 +705,37 @@ def do_cosine_fit(erp_amplitude, phase_bin_means, freq_band, labels, perm = True
 
 
 def do_cosine_fit_ll(erp_amplitude, phase_bin_means, freq_band, labels, perm = True):
-
+        """ 
+    Inputs: 
+        
+            erp_amplitude: is a dictionary file of two ERPs of each target frequency and phase.
+                           This variable is calculated by first averaging over the channels within 
+                           the chosen cluster and then averaging over epochs in the main script. 
+                           Z scoring happens inside this function. I have one value for each ERP,
+                           target freq and target phase and I do z scoring for each ERP, target freq
+                           within the phases.
+                           If my explanations are not clear enough, below the structure of this variable
+                           and how zscoring is done, is shown.
+                                                                                ____________                  
+                                                                               \  ____0°    \      
+                                                            ______ 4Hz ________\ |    .     \       
+                                                ______ ERP1|______ 8Hz         \ |    .     \     
+                                               |           |         .         \ |____315°  \   
+                                               |           |         .         \____________\                     
+                               erp_amplitude               |______40Hz               \
+                                               |                                     \                                                       
+                                               |                                     \
+                                               |                                     \                             
+                                               |______ ERP2                          \
+                                                                                 z scoring
+                                                                                     \
+                                                                                     \
+                                                                                     \
+                                                                               cosine fitting
+                                                                               
+             freq_band:
+                 freq_band = np.arange(4,44,4), for real time labels.                                                          
+                                                                   """
     
     cosinefit = {}
     amplitudes_cosine = np.zeros([len(freq_band), len(labels)])
